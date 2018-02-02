@@ -38,7 +38,7 @@
     <div id="test1-content">
       <div class="accordion_child">
 	    <p>系统的基本结构框架如下： 主要分为1) 输入处理(包括信号和数据)； 2) MCU功能实现； 和3)输出信号及显示。</p>
-        <img src="images/projects/smart-rack-system-arch.png" style="width:100%">
+        <img src="projects/smart-rack-system-arch.png" style="width:100%">
       </div>
     </div>
 	
@@ -69,7 +69,7 @@
 					</ol>
 				</p>
 			</td style="width:40%">
-			<td><img src="images/projects/smart-rack-peripheral-chips.png" alt="smart-rack-peripheral-chips" style="width:350px"/>
+			<td><img src="projects/smart-rack-peripheral-chips.png" alt="smart-rack-peripheral-chips" style="width:350px"/>
 			</td>
 		  </tr>
 		</table>
@@ -91,7 +91,7 @@
 			</ul>
 		  </li>
           <li>液晶屏显示： 分别显示当前时间与定时时间。MCU同样通过通用I/O接口与液晶屏连接，对于写入控制信号和数据信号。其中，数据信号从时间芯片中读取，定时时间是手动设置存在MCU中的。
-		  <span class="center"><img src="images/projects/smart-rack-lcd-display.png" alt="smart-rack-lcd-display"></span></li>
+		  <span class="center"><img src="projects/smart-rack-lcd-display.png" alt="smart-rack-lcd-display"></span></li>
         </ol>
       </div>
     </div>
@@ -110,7 +110,7 @@
 			</ul>
 		  </li>
 		 </ol>
-		 <span class="center"><img src="images/projects/smart-rack-mcu-program-flow.png" alt="smart-rack-mcu-program-flow"></span></li>
+		 <span class="center"><img src="projects/smart-rack-mcu-program-flow.png" alt="smart-rack-mcu-program-flow"></span></li>
       </div>
     </div>
 	
@@ -127,6 +127,7 @@
 		  <li>定时功能原计划是直接使用MCU内部的定时器。MCU共有两个定时器，但如果这样的话讲导致程序中共有三个部分需要定时器：旋钮按下检测的5ms延时、定时功能、电机持续转动时间(约3s)的定时。因此，最后选择采用独立的时钟芯片实现定时功能。
 		</ul>
 		</p>
+	    <span class="center"><img src="projects/smart-rack-final-product.png" alt="smart-rack-final-product"></span></li>
       </div>
     </div>
 	
