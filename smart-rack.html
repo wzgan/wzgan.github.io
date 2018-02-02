@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Smart Laundry: Auto Retractable Rack On Intel MCS-51</title>
+  <link rel="stylesheet" href="assets/project-style.css" type="text/css" media="screen" />
+  <script type="text/javascript" src="assets/accordian.pack.js"></script>
+</head>
+
+<body onload="new Accordian('basic-accordian',6,'header_highlight');">
+  <div id="logo"><h1>Smart Laundry</h1></div>
+  <div id="basic-accordian" >
+    <div id="test-header" class="accordion_headings header_highlight"><a href="index.html">Back to Home</a></div>
+    <div id="test-content">
+      <div class="accordion_child">
+        <h1>Smart Laundry: Auto Retractable Rack On Intel MCS-51</h1>
+        <ul>
+          <li><b><u><h3>Background</h3></b></u>
+		  51单片机（MCS-51, or 8051）是一种广泛应用于工业测控系统的8位MCU （Multipoint Control Unit，把CPU的频率与规格做适当缩减，并将内存、计数器、及周边接口等都整合在单一芯片上的芯片级计算机）。</li>
+          <li><b><u><h3>Configuration</h3></b></u>
+		  本项目采用的51单片机具有8KB的Flash（存储程序），512B的RAM（存储数据）以及3个16位定时器。使用C语言编程，经过编译后下载到MCU中即可运行。</li>
+		  <li><b><u><h3>Assumption</h3></b></u> 因实验条件限制，晾衣架伸缩的机械传动装置由电机的正反转来模拟，电机正转代表晾衣架向外伸出，反转则表示晾衣架往回收缩。在实际情况下，晾衣架往往的伸缩有一定的范围，因为在实验中我们将此模拟为电机转动一定时间后自动停止。
+		  <li><b><u><h3>Functionalities</h3></b></u>
+		    <ul> 
+				<li>根据天气情况自动伸缩：下雨或光照过强时缩回晾衣架；天晴或光照适中时伸出晾衣架;</li>
+				<li>使用旋钮设置定时，根据设定时间准时缩回晾衣架;</li>
+				<li>通过手机短信远程控制晾衣架的伸缩：向系统发送ON，衣架伸出；发送OFF，衣架收回;</li>
+				<li>优先级：短信控制>定时控制>晴雨自动控制.</li>
+			</ul>
+		  </li>
+        </ul>
+      </div>
+    </div>
+	
+	
+    <div id="test1-header" class="accordion_headings">System Architecture</div>
+    <div id="test1-content">
+      <div class="accordion_child">
+	    <p>系统的基本结构框架如下： 主要分为1) 输入处理(包括信号和数据)； 2) MCU功能实现； 和3)输出信号及显示。</p>
+        <img src="images/projects/smart-rack-system-arch.png" style="width:100%">
+      </div>
+    </div>
+	
+	
+    <div id="test2-header" class="accordion_headings">Input Modules</div>
+    <div id="test2-content">
+      <div class="accordion_child">
+	  
+	    <div class="container">
+		<table>
+		  <tr>
+			<td style="width:60%">
+				<p>
+				  系统的输入模块共有四部分： 
+					<ol> 
+						<li>晴雨检测感应器: 这一模块连接MCU的一个通用I/O接口，产生晴雨检测的数据信号。天晴时，输入高电平(信号“1”); 下雨时雨滴落在传感器面板上，通过电路作用产生一个低电平(信号“0”)传入MCU。</li>
+						<li>GSM通信芯片: 这一模块实现了短信的收发，以及短信内容的读取。与其他芯片不同，GSM需要与MCU的RXD(数据接收引脚)和TXD(数据发送引脚)连接，当模块接收到短信并将短信内容存入缓存后，根据短信内容与预先存储的模式进行匹配，由MCU发出正确的电机指令。</li>
+						<li>时钟芯片: 时钟芯片DS1302，有年、月、日、周、时、分、秒计时功能，当前时间存储在芯片的RAM中。通过与MCU的一个通用I/O接口相连接，可以进行数据的双向传输： MCU往芯片中写入配置数据(如调整时间)，并从芯片RAM的相应地址中读取当前时间，存入寄存器。</li>
+						<li>定时旋钮: 定时按钮与时间芯片一起共同实现了定时收缩的功能。
+						<ul>
+							<li>旋钮接收两种操作模式: 旋转，以及按下。时间的显示模式为XX：XX。</li>
+							<li>旋钮按下，即可对当前时间位(不同位置的数字)进行切换；旋钮转动，对当前位置进行调整(0-9)</li>
+							<li>旋钮与MCU的三个通用I/O接口连接，其中两个用于接收“旋转”信号，第三个接口用于接收“按下”信号。</li>
+							<li>MCU通过扫描接口的电平来检测旋钮的两种操作： 旋动会是接口电平高低交替变换，通过检测程序可以确定旋动的方向和旋动的圈数；按下时会产生一个低电平脉冲，通过检测程序可进一步确认。</li>
+							<li>将预先设定的定时时间存入一个数组，并与当前时间进行比较，当时间到了时，由MCU对驱动电机发出反转的信号。</li>
+						</ul>
+						</li>
+					</ol>
+				</p>
+			</td style="width:40%">
+			<td><img src="images/projects/smart-rack-peripheral-chips.png" alt="smart-rack-peripheral-chips" style="width:350px"/>
+			</td>
+		  </tr>
+		</table>
+      </div>
+	  </div>
+    </div>
+	
+	
+    <div id="test3-header" class="accordion_headings">Output Modules</div>
+    <div id="test3-content">
+      <div class="accordion_child">
+        <p>系统的输出信号由两部分组成:</p>
+		<ol>
+          <li>电机驱动芯片： MCU通过两个I/O接口与电机驱动芯片连接。 MCU通过输出的指定对电机进行控制：
+			<ul>
+			  <li>MCU输出01 - 电机正转</li>
+			  <li>MCU输出10 - 电机反转</li>
+			  <li>MCU输出00 - 电机停止</li>
+			</ul>
+		  </li>
+          <li>液晶屏显示： 分别显示当前时间与定时时间。MCU同样通过通用I/O接口与液晶屏连接，对于写入控制信号和数据信号。其中，数据信号从时间芯片中读取，定时时间是手动设置存在MCU中的。
+		  <span class="center"><img src="images/projects/smart-rack-lcd-display.png" alt="smart-rack-lcd-display"></span></li>
+        </ol>
+      </div>
+    </div>
+	
+	
+	<div id="test4-header" class="accordion_headings">MCU Logic Flow</div>
+    <div id="test4-content">
+      <div class="accordion_child">
+        <p>主程序首先对MCU的内部资源(中断、定时器、串口等)和GSM模块进行初始化配置，之后进入循环状态，进行两个任务的执行：</p>
+		<ol>
+          <li>检测信号： 是否下雨? 是否达到定时时间? 是否接收到短信? 短信内容是ON还是OFF? </li>
+		  <li>等待中断
+		  	<ul>
+			  <li>等待5ms定时中断，每当定时器计时到5ms，进入定时中断服务程序，完成旋钮的按下检测和旋转检测，以及读取实时时间数据并据此对液晶屏进行刷新；</li>
+			  <li>等待串口通讯中断，每当GSM模块接收到短信并发出通信请求时，进入串口通讯中断服务程序，完成短信内容的读取。</li>
+			</ul>
+		  </li>
+		 </ol>
+		 <span class="center"><img src="images/projects/smart-rack-mcu-program-flow.png" alt="smart-rack-mcu-program-flow"></span></li>
+      </div>
+    </div>
+	
+    <div id="test5-header" class="accordion_headings">Take Aways</div>
+    <div id="test5-content">
+      <div class="accordion_child">
+        <p>在软件设计部分的一个主要问题是程序中各任务执行的顺序和MCU内部资源的分配。
+		<br><br>
+		MCU需要完成的主要任务有旋钮检测、LCD刷新、短信数据读取、实时时钟数据读取，这些任务如果全部放在主程序中以<b><u>线性</b></u>方式执行，会造成数据采集和处理的延迟。
+		<ul>
+          <li>其中旋钮按下检测的间隔需要约5ms时间，如果采取延时方式会造成MCU的闲置，因此设置一个5ms定时中断，在计时的同时，MCU可以检测处理其他信号，5ms计时结束进入中断后再进行检测。</li>
+		  <li>LCD显示内容的改变主要来自实时时钟，因此实时时钟数据的读取和LCD的刷新可以同步执行，由于该过程语句较多，执行一次耗时较长，因此不直接在主程序中调用，而是放在5ms定时中断服务程序中，每5ms执行一次。</li>
+		  <li>短信数据的读取放在定时中断内，每执行一次约3ms。</li>
+		  <li>定时功能原计划是直接使用MCU内部的定时器。MCU共有两个定时器，但如果这样的话讲导致程序中共有三个部分需要定时器：旋钮按下检测的5ms延时、定时功能、电机持续转动时间(约3s)的定时。因此，最后选择采用独立的时钟芯片实现定时功能。
+		</ul>
+		</p>
+      </div>
+    </div>
+	
+
+  </div>
+
+</body>
+</html>
