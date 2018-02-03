@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Sokoban: A FPGA-based Transport Puzzle Game</title>
+  <link rel="stylesheet" href="assets/project-style.css" type="text/css" media="screen" />
+  <script type="text/javascript" src="assets/accordian.pack.js"></script>
+</head>
+
+<body onload="new Accordian('basic-accordian',6,'header_highlight');">
+  <div id="logo"><h1>Sokoban@FPGA</h1></div>
+  <div id="basic-accordian" >
+    <div id="test-header" class="accordion_headings header_highlight"><a href="index.html">Back to Home</a></div>
+    <div id="test-content">
+      <div class="accordion_child">
+        <h1>Sokoban: A FPGA-based Transport Puzzle Game</h1>
+        <ul>
+          <li><b><u><h3>Background</h3></b></u>
+			FPGA(Field Programmable Gate Array)
+			<ul>
+				<li>也称为“现场可编程门阵列”，是一种半定制电路，既解决了全定制电路的不足，又客服了早一代可编程逻辑器件	门电路有限的缺点。</li>
+				<li>对FPGA的编程在编译后转化为FPGA内的连线表，相当于FPGA内提供了大量的与非门、或非门、触发器等基本数字器件，编程决定了有多少器件被使用以及它们之间的连接。目前以硬件描述语言(Verilog或VHDL)所完成的电路设计，可以经过简单的综合与布局，快速的烧录至FPGA上进行测试，是现代集成电路设计验证的技术主流。</li>
+				<li>pros: 快速成品，内部逻辑可以反复修改，除错成本较低，因此更好方便灵活。
+				</li>
+				<li>cons: 一般来说比专门集成电路(ASIC)速度要慢，也无法完成更加复杂的设计，并且会消耗更多的电能。
+				</li>
+			</ul>
+			</li>
+			
+          <li><b><u><h3>Configuration & Rules</h3></b></u>
+		    <ul> 
+				<li>显示器设定为800X600;</li>
+				<li>使用PS/2接口连接鼠标;</li>
+				<li>游戏区域最大面积为8行8列;</li>
+				<li>主要元素分为： 墙体、通道、箱子、搬运工、目标位置标记、信息区、及命令按钮等;</li>
+				<li>游戏分为4关，其中Level 0为测试;</li>
+				<li>游戏规则
+				<ul> 
+					<li>搬运工每次只能移动一步;</li>
+					<li>移箱子： 当箱子两边分别为搬运工与通道(满足箱子移动条件)，鼠标左键点击箱子，箱子和搬运工均前进一步;</li>
+					<li>移位置： 鼠标左键点击搬运工旁边的通道，搬运工即可移动到该位置;</li>
+					<li>回退(Rollback): 允许最多三次，鼠标左键点击"Retract"按钮;</li>
+					<li>重试(Retry): 该Level重新开始游戏;</li>
+					<li>重置(Reset): 从Level 0重新开始游戏。</li>
+				</ul>
+				</li>
+			</ul>
+        </ul>
+		<span class="center"><img src="projects/sokoban-interface.png"></span>
+      </div>
+    </div>
+	
+	
+    <div id="test1-header" class="accordion_headings">FPGA Program Flow</div>
+    <div id="test1-content">
+      <div class="accordion_child">
+	    <p>如下图所示，FPGA内部处理可以分为四大模块：
+		<ol>
+			<li><B><U>PS/2接口连接鼠标</B></U>，根据传输协议接收鼠标传来的数据信息，给出1)鼠标在显示屏上的位置信息，和2)左右键的按下信号；</li>
+			<li><B><U>游戏进程控制模块</B></U>根据数据操作更新游戏的实时状态，负责提供不同关卡初始地图信息、箱子和搬运工的实时位置信息，返回给显示模块；</li>
+			<li><B><U>SVGA视频同步信号发生器</B></U>负责给出当前扫描的位置坐标，并返回给显示模块，同时，它也提供控制电子束扫描的信号传送给外部显示器；</li>
+			<li><B><U>显示模块</B></U>负责对当前电子束扫描到的坐标进行分析判断，确定应该显示的内容(不同元素，如墙体、通道、箱子、搬运工、目标位置标记、信息区、命令按钮、鼠标光标等)，并向外部县市区输出RGB信号。</li>
+		</ol>
+		</p>
+        <img src="projects/sokoban-fpga-flow.png" style="width:100%">
+		<p>其中，鼠标数据接收处理以及进程控制较为容易理解，因此下面我们介绍其中两个模块，SVGA视频同步信号发生器和显示模块的详细设计。</p>
+      </div>
+    </div>
+	
+	
+    <div id="test2-header" class="accordion_headings">SVGA Video Signal Sync / Clock Generator</div>
+    <div id="test2-content">
+      <div class="accordion_child">
+	    <div class="container">
+		<p>SVGA视频同步信号发生器主要负责两个任务：
+		<ol>
+			<li>电子束控制信号产生: 按照电子束逐行扫描的方式，从屏幕左上方开始，从左到右，从上到下扫描。每行扫描800个像素点，一共扫描600行。 扫描到有效区域时，控制信号为高电平(发射电子束)；每扫描完一行，电子束移动到下一行的起始位置，这期间控制信号为低电平(不发射电子束)；扫描完所有行，电子束回到屏幕左上方，这期间控制信号也为低电平(不发射电子束)。
+			</li>
+			<li>当前扫描坐标的计算: 对控制信号在电子束发射期间经过的时间脉冲进行计数(每个时间脉冲扫描一个像素点)，可以得到当前行坐标x；对电子束在回到屏幕左上方之前移动到下一行的次数进行计数，可以得到当前列坐标y。
+			</li>
+		</ol>
+		</p>
+      </div>
+	  </div>
+    </div>
+	
+	
+    <div id="test3-header" class="accordion_headings">Visulization Module</div>
+    <div id="test3-content">
+      <div class="accordion_child">
+        <div style="position: relative; overflow:hidden">
+		<p>我们采用多图层的方式来设计显示电路：将整个图像的不同元素分配到多个图层中，各图层通过上下叠加的方式组成整个图像。上层图层的优先级较高，可以覆盖下层图层。如果上层图像的部分像素点设置为透明色，则该部分不会覆盖下层图层。这样通过上图层对下图层的选择性覆盖和各图层的上下叠加就可以实现整个图像的显示。</p>
+        <span class="center"><img src="projects/sokoban-visulization-layers.png" alt="sokoban-visulization-layers" style="max-width:800px"></span>
+		<p>图层分配和结构示意图如上图所示，其中
+			<ul>
+			  <li>top_layer: 背景设置为透明色，RGB数据存于FPGA的ROM内核(可直接调用的内部数据块)，图案大小为16x16像素；</li>
+			  <li>mid2_layer: 背景设置为透明色，RGB数据存放于FPGA的ROM内核，图案大小为32x32像素；</li>
+			  <li>mid1_layer: 包括墙体、通道、箱子、和目标地点，每种图案单个大小为32x32像素，分别存于FPGA的四个ROM内核。</li>
+			  <li>bottom_layer: 包括信息区“Level x”和控制按钮区“retry”和“retract”。此处采用字库的方式存储所有字母和数字的点阵信息(多个由1和0组成的8x16点阵，1组成字符形状，0组成背景)并一起存入一个ROM内核，调用时再根据需要的字母或数字在相应地址读取。与图片不同，字库读取得到的数据并非RGB数据，而是单独的1和0，需要分别设置两者对应的RGB数据(此处将1设置为白色，0设置为透明色)。</li>
+			</ul>
+		</p>
+        <span class="center"><img src="projects/sokoban-disassembld-layers.png" alt="sokoban-disassembled-layers" style="max-width:800px"></span>
+		</div>
+	  </div>
+    </div>
+	
+	
+	<div id="test4-header" class="accordion_headings">Lesson Learned</div>
+    <div id="test4-content">
+      <div class="accordion_child">
+		<ol>
+          <li>与软件语言不同，verilog语言是一种与硬件结构及其连接方式紧密相关的硬件语言。它的每一种语法都对应到一种电路形式(如always语句对应到组合单元或时序单元，case语句对应到组合电路的数据选择器)。因此：
+		  <ul>
+			  <li>对程序不应该单纯地理解为逐句执行，而要将其看作是对各电路模块接口的相互连接，赋值看作是给予一个激励信号，经过特定功能的电路(由语句描述)后得到输出；</li>
+			  <li>在编程时不能只注重程序的简洁，而更需要关注所使用语句对应的电路结构是否高效。比如说，尽量不使用比较长的等式作为if_else语句的判断条件，这样会在语句生成的数据选择器中引入大量加法器，使电路复杂化，不便于检查调试。</li>
+		  </ul>
+		  </li>
+		  <li>字符的显示需要对当前扫描位置坐标进行反复的判断: 首先要根据x坐标确定需要显示哪一个字符(因为字符是横向排列的)，这样可以定位到ROM内核中该汉字点阵的起始地址；然后根据y坐标确定应该读取该汉字点阵的哪一行，将起始地址加上这个行数据，得到一个当前数据地址，从该地址取出一串8位(汉字为16位)的0、1数据(点阵图案的一行)；最后再根据x坐标确定当前像素对应取出数据的哪一位，并按照0、1赋予不同的RGB值。
+		  </li>
+		 </ol>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
